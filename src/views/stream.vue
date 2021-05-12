@@ -1,14 +1,31 @@
 <template>
   <div>
-    <div id="user-video-1" style="height: 100vh; width:  100vw; position:  absolute"></div>
-    <!-- <div id="user-video-2" style="height: 100px; width:  100px; position:  relative"></div>
+    <!-- <div id="user-video-1" style="height: 100vh; width:  100vw; position:  absolute"></div>
+    <div id="user-video-2" style="height: 100px; width:  100px; position:  relative"></div>
     <div id="user-video-3" style="height: 100px; width:  100px; position:  relative"></div>
     <div id="user-video-4" style="height: 100px; width:  100px; position:  relative"></div>-->
-    <div style="position: relative">
+    <!-- <div style="position: relative">
       <el-button type="primary" @click="leaveEvent" v-if="joined" plain>leave</el-button>
     </div>
     <div class="agora-view">
       <div class="agora-video" v-if="joined"></div>
+    </div>-->
+    <div class="hello">
+      <el-button type="primary" @click="joinEvent" :disabled="disableJoin">join</el-button>
+      <el-button type="primary" @click="leaveEvent" plain :disabled="!disableJoin">leave</el-button>
+      <div class="agora-view">
+        <div class="agora-video">
+          <StreamPlayer :stream="localStream" :domId="localStream.getId()" v-if="localStream"></StreamPlayer>
+        </div>
+        <div class="agora-video">
+          <StreamPlayer
+            :key="index"
+            v-for="(remoteStream, index) in remoteStreams"
+            :stream="remoteStream"
+            :domId="remoteStream.getId()"
+          ></StreamPlayer>
+        </div>
+      </div>
     </div>
     <q-dialog v-model="isLoading">
       <q-card flat class="loader">
@@ -23,64 +40,89 @@
     </q-dialog>
   </div>
 </template>
-
 <script>
 import RTCClient from "../agora";
 import { log } from "../utils/utils";
+import StreamPlayer from '../components/streamplayer'
 export default {
   data() {
     return {
       option: {
-        appid: "",
+        appid: "d3fa0e985f114b0a9876aa4dcfffc0c1",
         token: "",
         uid: null,
         channel: "",
         mainVideoId: "user-video-1"
       },
       joined: false,
-      isLoading: false
+      isLoading: false,
+      localStream: null,
+      remoteStreams: [],
+      disableJoin: false
     };
+  },
+  components:{
+    StreamPlayer
   },
   methods: {
     joinEvent() {
+      this.option.appid = "d3fa0e985f114b0a9876aa4dcfffc0c1";
+      console.log(this.option);
+      if (!this.option.appid) {
+        this.judge("Appid");
+        return;
+      }
       if (!this.option.channel) {
         this.judge("Channel Name");
         return;
       }
       this.isLoading = true;
       this.rtc
-        .join()
-        .then(response => {
-          this.isLoading = false;
-          this.joined = true;
+        .joinChannel(this.option)
+        .then(() => {
           this.$message({
             message: "Join Success",
             type: "success"
           });
+          this.rtc
+            .publishStream()
+            .then(stream => {
+              this.$message({
+                message: "Publish Success",
+                type: "success"
+              });
+              this.localStream = stream;
+              this.isLoading = false;
+              this.remoteStreams.push(this.localStream);
+            })
+            .catch(err => {
+              this.$message.error("Publish Failure");
+              log("publish local error", err);
+            });
         })
         .catch(err => {
           this.$message.error("Join Failure");
           log("join channel error", err);
         });
-      //   this.disableJoin = true;
+      this.disableJoin = true;
     },
     leaveEvent() {
+      this.disableJoin = false;
       this.rtc
-        .leave()
+        .leaveChannel()
         .then(() => {
-          this.joined = false;
+          this.$router.push('/')
           this.$message({
             message: "Leave Success",
             type: "success"
           });
-          this.$router.push("/");
         })
         .catch(err => {
           this.$message.error("Leave Failure");
           log("leave error", err);
         });
-      //   this.localStream = null;
-      //   this.remoteStreams = [];
+      this.localStream = null;
+      this.remoteStreams = [];
     },
     judge(detail) {
       this.$notify({
@@ -99,13 +141,13 @@ export default {
       .doc(this.$route.params.id)
       .onSnapshot(doc => {
         // this.option.channel = doc.data().name;
-        this.joinEvent();
       });
-    console.log(this.option);
 
     // log(this.rtc.token);
     this.option.token = this.rtc.token;
     this.option.appid = this.rtc.appId;
+    console.log(this.option);
+    this.joinEvent();
     let rtc = this.rtc;
     rtc.on("stream-added", evt => {
       let { stream } = evt;
