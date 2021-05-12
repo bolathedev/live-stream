@@ -11,15 +11,18 @@
       <div class="agora-video" v-if="joined"></div>
     </div>-->
     <div class="hello">
-      <el-button type="primary" @click="joinEvent" :disabled="disableJoin">join</el-button>
-      <el-button type="primary" @click="leaveEvent" plain :disabled="!disableJoin">leave</el-button>
       <div class="agora-view">
-        <div class="agora-video">
-          <StreamPlayer :stream="localStream" :domId="localStream.getId()" v-if="localStream"></StreamPlayer>
-        </div>
+        <StreamPlayer
+          :stream="localStream"
+          style="height: 100vh; width: 100vw; position: absolute"
+          :domId="localStream.getId()"
+          v-if="localStream"
+        ></StreamPlayer>
+
         <div class="agora-video">
           <StreamPlayer
             :key="index"
+            style="position: relative;"
             v-for="(remoteStream, index) in remoteStreams"
             :stream="remoteStream"
             :domId="remoteStream.getId()"
@@ -27,6 +30,7 @@
         </div>
       </div>
     </div>
+
     <q-dialog v-model="isLoading">
       <q-card flat class="loader">
         <q-circular-progress
@@ -38,12 +42,15 @@
         />
       </q-card>
     </q-dialog>
+    <div class="absolute-top" style="margin: 1em">
+      <el-button type="primary" @click="leaveEvent" plain :disabled="!disableJoin">leave</el-button>
+    </div>
   </div>
 </template>
 <script>
 import RTCClient from "../agora";
 import { log } from "../utils/utils";
-import StreamPlayer from '../components/streamplayer'
+import StreamPlayer from "../components/streamplayer";
 export default {
   data() {
     return {
@@ -61,7 +68,7 @@ export default {
       disableJoin: false
     };
   },
-  components:{
+  components: {
     StreamPlayer
   },
   methods: {
@@ -91,9 +98,11 @@ export default {
                 message: "Publish Success",
                 type: "success"
               });
+              console.log(stream);
               this.localStream = stream;
               this.isLoading = false;
               this.remoteStreams.push(this.localStream);
+              console.log(this.remoteStreams);
             })
             .catch(err => {
               this.$message.error("Publish Failure");
@@ -111,7 +120,7 @@ export default {
       this.rtc
         .leaveChannel()
         .then(() => {
-          this.$router.push('/')
+          this.$router.push("/");
           this.$message({
             message: "Leave Success",
             type: "success"

@@ -1,5 +1,5 @@
 <template>
-  <div class="agora-video-player" ref="player" :id="domId"></div>
+  <div class="agora-video-player absolute-top" ref="player" :id="domId"></div>
 </template>
 
 <script>
@@ -7,9 +7,9 @@ export default {
   name: "stream-player",
   props: ["stream", "domId"],
   mounted() {
-    this.$nextTick(function () {
+    this.$nextTick(function() {
       if (this.stream && !this.stream.isPlaying()) {
-        this.stream.play(`${this.domId}`, { fit: "cover" }, (err) => {
+        this.stream.play(`${this.domId}`, err => {
           if (err && err.status !== "aborted") {
             console.warn("trigger autoplay policy");
           }
@@ -24,13 +24,14 @@ export default {
       }
       this.stream.close();
     }
-  },
+  }
 };
 </script>
 
 <style>
 .agora-video-player {
-  height: 100%;
-  width: 100%;
+  height: 200px;
+  width: 200px;
+  top: 0;
 }
 </style>
