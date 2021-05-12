@@ -1,9 +1,9 @@
 <template>
-<div>
+  <div>
     <div id="user-video-1" style="height: 100vh; width:  100vw; position:  absolute"></div>
     <!-- <div id="user-video-2" style="height: 100px; width:  100px; position:  relative"></div>
     <div id="user-video-3" style="height: 100px; width:  100px; position:  relative"></div>
-    <div id="user-video-4" style="height: 100px; width:  100px; position:  relative"></div> -->
+    <div id="user-video-4" style="height: 100px; width:  100px; position:  relative"></div>-->
     <div style="position: relative">
       <el-button type="primary" @click="leaveEvent" v-if="joined" plain>leave</el-button>
     </div>
@@ -21,7 +21,6 @@
         />
       </q-card>
     </q-dialog>
-  </div>
   </div>
 </template>
 
@@ -73,8 +72,8 @@ export default {
           this.$message({
             message: "Leave Success",
             type: "success"
-          }); 
-          this.$router.push('/')
+          });
+          this.$router.push("/");
         })
         .catch(err => {
           this.$message.error("Leave Failure");
@@ -111,7 +110,7 @@ export default {
     rtc.on("stream-added", evt => {
       let { stream } = evt;
       log("[agora] [stream-added] stream-added", stream.getId());
-      console.log(stream)
+      console.log(stream);
       rtc.client.subscribe(stream);
     });
 
